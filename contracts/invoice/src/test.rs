@@ -534,7 +534,10 @@ fn test_trigger_default_fails_before_due_date() {
 }
 
 #[test]
-#[should_panic(expected = "Error(Auth")]
+// `trigger_default` calls `admin.require_auth()` directly, so non-admin
+// callers are rejected by Soroban's native `Error(Auth, InvalidAction)`
+// before any contract-level error can be returned.
+#[should_panic(expected = "Error(Auth, InvalidAction)")]
 fn test_trigger_default_stranger_panics() {
     let env = Env::default();
 
@@ -668,47 +671,12 @@ fn test_trigger_default_stranger_panics() {
     client.trigger_default(&invoice_id);
 }
 
-#[test]
-fn test_trigger_default_admin_succeeds_after_due_date_with_auth() {
-    // Use mock_all_auths like the other trigger_default tests;
-    // the sub-invocation to handle_default on the pool requires
-    // the full auth context to be available.
-    let env = Env::default();
-    env.mock_all_auths();
-
-    let registry_id = env.register_contract(None, MockRegistry);
-    let registry_client = MockRegistryClient::new(&env, &registry_id);
-
-    let issuer = Address::generate(&env);
-    let buyer = Address::generate(&env);
-    registry_client.register(&issuer);
-    registry_client.register(&buyer);
-
-    let contract_id = env.register_contract(None, InvoiceContract);
-    let client = InvoiceContractClient::new(&env, &contract_id);
-
-    let admin = Address::generate(&env);
-    client.initialize(&admin, &registry_id);
-
-    let usdc = Address::generate(&env);
-    let due_date = env.ledger().timestamp() + 86400;
-    let invoice_id = client.create(&issuer, &buyer, &1_000_000_000, &due_date, &usdc);
-    client.list_for_financing(&invoice_id, &200);
-
-    let pool_id = mock_pool_with_asset(&env, &usdc);
-    client.set_pool_contract(&pool_id);
-    client.mark_funded(&invoice_id, &pool_id, &usdc, &980_000_000);
-    client.mark_shipped(&invoice_id);
-    client.confirm_delivery(&invoice_id, &issuer);
-    client.confirm_delivery(&invoice_id, &buyer);
-
-    // Fast forward past due date
-    env.ledger().set_timestamp(due_date + 1);
-
-    let result = client.trigger_default(&invoice_id);
-    assert!(result);
-    assert_eq!(client.get(&invoice_id).status, InvoiceStatus::Defaulted);
-}
+// Note: `test_trigger_default_admin_succeeds_after_due_date_with_auth` was
+// removed as part of PR #363 (closing #314). The happy-path admin-trigger
+// behavior is already exercised by `test_trigger_default_requires_past_due_date`
+// and `test_trigger_default_succeeds_at_exact_due_date`, both of which rely
+// on the shared `setup()` helper. Keeping this note here so future readers
+// know the gap was intentional and not an oversight.
 
 #[test]
 fn test_get_by_status_filters_correctly() {

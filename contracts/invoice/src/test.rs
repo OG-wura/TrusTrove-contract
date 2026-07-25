@@ -551,6 +551,9 @@ fn test_trigger_default_fails_before_due_date() {
 // before any contract-level error can be returned.
 #[should_panic(expected = "Error(Auth, InvalidAction)")]
 fn test_trigger_default_stranger_panics() {
+    // `trigger_default` calls `admin.require_auth()` directly, so a non-admin
+    // caller is rejected at the auth layer with Soroban's native
+    // `Error(Auth, InvalidAction)` before any state transition.
     let env = Env::default();
 
     let registry_id = env.register_contract(None, MockRegistry);

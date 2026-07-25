@@ -492,6 +492,32 @@ impl PoolContract {
     /// ```ignore
     /// client.receive_repayment(&invoice_id, 1_050);
     /// ```
+    /// Receives invoice repayment and updates pool liquidity metrics.
+    ///
+    /// # Arguments
+    /// * `env` - The Soroban environment.
+    /// * `invoice_id` - The invoice being repaid.
+    /// * `amount` - The amount repaid.
+    ///
+    /// # Auth
+    /// Requires authorization from the configured `invoice_contract`
+    /// (via `invoice_contract.require_auth()`); only the invoice contract may
+    /// invoke this entry point.
+    ///
+    /// # Panics
+    /// * `InvoiceNotFound` if the invoice is not funded.
+    /// * `InvalidAmount` if the repayment amount is less than the funded amount.
+    /// * `ActiveCountUnderflow` if the active-invoice counter would underflow
+    ///   (e.g. a mismatched repayment for an invoice that was never funded
+    ///   through this pool).
+    ///
+    /// # Returns
+    /// * `bool` - `true` when repayment is processed.
+    ///
+    /// # Example
+    /// ```ignore
+    /// client.receive_repayment(&invoice_id, 1_050);
+    /// ```
     pub fn receive_repayment(env: Env, invoice_id: BytesN<32>, amount: u128) -> bool {
         let invoice_contract: Address = env
             .storage()

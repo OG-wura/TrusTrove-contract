@@ -765,7 +765,10 @@ impl InvoiceContract {
             .unwrap_or(7 * 24 * 60 * 60)
     }
 
-    pub fn check_auth(_env: Env, address: Address) {
+    /// Helper to check authorization for a given address.
+    /// This is invoked dynamically via `try_invoke_contract` in `expire_listing`.
+    #[allow(dead_code)]
+    fn check_auth(_env: Env, address: Address) {
         address.require_auth();
     }
 

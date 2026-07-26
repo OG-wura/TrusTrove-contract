@@ -895,6 +895,67 @@ fn test_receive_repayment_active_count_underflow_panics() {
     te.pool.receive_repayment(&phantom_id, &funded_amount);
 }
 
+#[test]
+#[should_panic(expected = "Error(Contract, #15)")]
+fn test_receive_repayment_with_refund_active_count_underflow_panics() {
+    let te = setup();
+    te.pool.deposit(&te.lp, &100_000_000_000);
+
+    let phantom_id = BytesN::from_array(&te.env, &[0xcd; 32]);
+    let funded_amount: u128 = 9_800_000_000;
+    te.env.as_contract(&te.pool_id, || {
+        te.env
+            .storage()
+            .persistent()
+            .set(&DataKey::FundedInvoice(phantom_id.clone()), &funded_amount);
+        te.env
+            .storage()
+            .instance()
+            .set(&DataKey::TotalFunded, &funded_amount);
+        te.env
+            .storage()
+            .instance()
+            .set(&DataKey::TotalDeposits, &funded_amount);
+        te.env
+            .storage()
+            .instance()
+            .set(&DataKey::ActiveInvoiceCount, &0u32);
+    });
+
+    te.pool
+        .receive_repayment_with_refund(&phantom_id, &funded_amount, &0, &te.buyer);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #15)")]
+fn test_handle_default_active_count_underflow_panics() {
+    let te = setup();
+    te.pool.deposit(&te.lp, &100_000_000_000);
+
+    let phantom_id = BytesN::from_array(&te.env, &[0xef; 32]);
+    let funded_amount: u128 = 9_800_000_000;
+    te.env.as_contract(&te.pool_id, || {
+        te.env
+            .storage()
+            .persistent()
+            .set(&DataKey::FundedInvoice(phantom_id.clone()), &funded_amount);
+        te.env
+            .storage()
+            .instance()
+            .set(&DataKey::TotalFunded, &funded_amount);
+        te.env
+            .storage()
+            .instance()
+            .set(&DataKey::TotalDeposits, &funded_amount);
+        te.env
+            .storage()
+            .instance()
+            .set(&DataKey::ActiveInvoiceCount, &0u32);
+    });
+
+    te.pool.handle_default(&phantom_id);
+}
+
 // ============== DEFAULT TESTS ==============
 
 #[test]

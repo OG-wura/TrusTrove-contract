@@ -896,7 +896,7 @@ fn test_receive_repayment_active_count_underflow_panics() {
 }
 
 #[test]
-#[should_panic(expected = "Error(Contract, #15)")]
+#[should_panic(expected = "Error(Contract, #17)")]
 fn test_receive_repayment_with_refund_active_count_underflow_panics() {
     let te = setup();
     te.pool.deposit(&te.lp, &100_000_000_000);
@@ -927,7 +927,7 @@ fn test_receive_repayment_with_refund_active_count_underflow_panics() {
 }
 
 #[test]
-#[should_panic(expected = "Error(Contract, #15)")]
+#[should_panic(expected = "Error(Contract, #17)")]
 fn test_handle_default_active_count_underflow_panics() {
     let te = setup();
     te.pool.deposit(&te.lp, &100_000_000_000);
